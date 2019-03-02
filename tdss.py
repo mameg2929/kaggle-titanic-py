@@ -3,12 +3,16 @@
 
 # パッケージ
 
-# In[1]:
+# jupyter nbconvert --to python tdss.ipynb
+# で.pyに変換
+
+# In[132]:
 
 
 import pandas as pd
 import numpy as np
 import random as rnd
+import math
 
 
 # In[2]:
@@ -32,7 +36,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
 
 
-# In[7]:
+# In[185]:
 
 
 train_df=pd.read_csv("train.csv")
@@ -94,6 +98,206 @@ train_df[["SibSp","Survived"]].groupby(["SibSp"]).mean()
 
 
 train_df[["Parch","Survived"]].groupby(["Parch"]).mean()
+
+
+# In[54]:
+
+
+g=sns.FacetGrid(train_df,col="Survived")
+g.map(plt.hist,"Age",bins=20)
+
+
+# In[63]:
+
+
+g=sns.FacetGrid(train_df,col="Survived")
+g.map(plt.hist,"Pclass",bins=20)
+
+
+# In[62]:
+
+
+grid=sns.FacetGrid(train_df,col="Survived",row="Pclass")
+grid.map(plt.hist,"Age",bins=20)
+
+
+# In[68]:
+
+
+grid=sns.FacetGrid(train_df,row="Embarked")
+grid.map(sns.pointplot,"Pclass","Survived","Sex")
+grid.add_legend()
+
+
+# In[69]:
+
+
+grid=sns.FacetGrid(train_df,row="Embarked",col="Survived")
+grid.map(sns.barplot,"Sex","Fare")
+
+
+# In[186]:
+
+
+train_df=train_df.drop(["Ticket","Cabin"],axis=1)
+test_df=test_df.drop(["Ticket","Cabin"],axis=1)
+combine=[train_df,test_df]
+print("After", train_df.shape, test_df.shape, combine[0].shape, combine[1].shape)
+
+
+# In[111]:
+
+
+train_df["Name"].describe()
+train_df.Name
+
+
+# In[187]:
+
+
+for dataset in combine:
+    dataset["Title"]=dataset.Name.str.extract("([A-Za-z]+)\.",expand=False)
+
+#dataset["Title"]
+#print(train_df)
+pd.crosstab(combine[0]["Title"],combine[0]["Sex"])
+train_df["Title"].describe()
+
+
+# In[188]:
+
+
+print(combine[0]["Title"].unique())
+print(type(combine[0]["Title"].unique()))
+raretitle=np.delete(combine[0]["Title"].unique(),[0,1,2,3],0)
+print(raretitle)
+
+
+
+# In[189]:
+
+
+for dataset in combine:
+    dataset["Title"]=dataset["Title"].replace(raretitle,"Rare")
+combine[0][["Title","Survived"]].groupby(["Title"]).mean()
+
+
+# In[116]:
+
+
+print(combine[0].isnull().any())
+
+
+# In[190]:
+
+
+#print(combine[0][combine[0]["Age"].isnull()])
+#print(combine[0][combine[0]["Age"].isnull()].loc[:,"Agena"])
+for dataset in combine:
+    dataset["Agena"]=0
+    for i in dataset.index:
+        #print(i)
+        #if dataset.at[i,"Age"].isnull():
+        if math.isnan(dataset.at[i,"Age"]):
+            dataset.at[i,"Agena"]=1
+    
+train_df["Agena"].describe()
+
+
+# In[134]:
+
+
+train_df["Embarked"].describe()
+
+
+# In[191]:
+
+
+for dataset in combine:
+    dataset.fillna({"Embarked":"S","Age":dataset["Age"].median(),"Fare":dataset["Fare"].mean()},inplace=True)
+    print(dataset.isnull().any())
+
+print(train_df.isnull().any())
+train_df.describe()
+
+
+# In[199]:
+
+
+print(type(train_df.at[0,"Sex"]))
+#print(train_df.info())
+print(type(combine))
+    
+
+
+# In[204]:
+
+
+dummylist=[]
+numlist=[]
+for i in train_df.columns:
+    print(type(train_df.at[0,i]))
+    if type(train_df.at[0,i])==str:
+        print(i)
+        dummylist.append(i)
+    else:
+        numlist.append(i)
+dummylist.remove("Name")
+print(dummylist)
+test_df['Survived']=np.nan
+combine1=[]
+for dataset in combine:
+    #print(pd.get_dummies(dataset[dummylist],drop_first=True,dummy_na=False,columns=None))
+    d1=pd.concat([dataset[numlist],pd.get_dummies(dataset[dummylist],drop_first=True,dummy_na=False,columns=None)],axis=1)
+    combine1.append(d1)
+
+print(dataset.describe())
+print(train_df.describe())
+print(combine1[1].describe())
+train_df1=combine1[0]
+test_df1=combine1[1]
+
+
+# In[218]:
+
+
+grid=sns.FacetGrid(train_df1,row="Survived",col="Agena")
+grid.map(plt.hist,"Age",bins=15)
+
+
+# In[222]:
+
+
+print(min(train_df1["Age"]))
+print(train_df1[train_df1["Age"]<=5].describe())
+print(train_df1[(train_df1["Age"]<=10) & (train_df1["Age"]>5)].describe())
+print(train_df1[(train_df1["Age"]<=15) & (train_df1["Age"]>10)].describe())
+
+
+# In[226]:
+
+
+for dataset in combine1:
+    dataset["Agebin"]=15
+    for i in range(15):
+        dataset.loc[(dataset["Age"]<=5*(i+1)) & (dataset["Age"]>5*i),"Agebin"]=i
+
+print(dataset["Agebin"].describe())
+print(train_df1["Agebin"].describe())
+print(test_df1["Agebin"].describe())
+
+
+# In[227]:
+
+
+train_df1.describe()
+
+
+# In[228]:
+
+
+pg=sns.pairplot(train_df1)
+print(type(pg))
 
 
 # In[ ]:
