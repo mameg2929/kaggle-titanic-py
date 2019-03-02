@@ -36,7 +36,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
 
 
-# In[185]:
+# In[240]:
 
 
 train_df=pd.read_csv("train.csv")
@@ -136,7 +136,7 @@ grid=sns.FacetGrid(train_df,row="Embarked",col="Survived")
 grid.map(sns.barplot,"Sex","Fare")
 
 
-# In[186]:
+# In[241]:
 
 
 train_df=train_df.drop(["Ticket","Cabin"],axis=1)
@@ -152,7 +152,7 @@ train_df["Name"].describe()
 train_df.Name
 
 
-# In[187]:
+# In[242]:
 
 
 for dataset in combine:
@@ -164,17 +164,19 @@ pd.crosstab(combine[0]["Title"],combine[0]["Sex"])
 train_df["Title"].describe()
 
 
-# In[188]:
+# In[247]:
 
 
 print(combine[0]["Title"].unique())
 print(type(combine[0]["Title"].unique()))
+print((combine[1]["Title"].unique()))
 raretitle=np.delete(combine[0]["Title"].unique(),[0,1,2,3],0)
+raretitle=np.insert(raretitle,0,"Dona")
 print(raretitle)
 
 
 
-# In[189]:
+# In[248]:
 
 
 for dataset in combine:
@@ -188,7 +190,7 @@ combine[0][["Title","Survived"]].groupby(["Title"]).mean()
 print(combine[0].isnull().any())
 
 
-# In[190]:
+# In[249]:
 
 
 #print(combine[0][combine[0]["Age"].isnull()])
@@ -210,7 +212,7 @@ train_df["Agena"].describe()
 train_df["Embarked"].describe()
 
 
-# In[191]:
+# In[250]:
 
 
 for dataset in combine:
@@ -230,7 +232,7 @@ print(type(combine))
     
 
 
-# In[204]:
+# In[251]:
 
 
 dummylist=[]
@@ -274,7 +276,7 @@ print(train_df1[(train_df1["Age"]<=10) & (train_df1["Age"]>5)].describe())
 print(train_df1[(train_df1["Age"]<=15) & (train_df1["Age"]>10)].describe())
 
 
-# In[226]:
+# In[252]:
 
 
 for dataset in combine1:
@@ -298,6 +300,30 @@ train_df1.describe()
 
 pg=sns.pairplot(train_df1)
 print(type(pg))
+
+
+# In[253]:
+
+
+for dataset in combine1:
+    dataset["Family"]=dataset["SibSp"]+dataset["Parch"]
+    dataset["alone"]=0
+    dataset.loc[dataset["Family"]==0,"alone"]=1
+    dataset["logage"]=np.log(dataset["Age"]+1)
+    
+print(train_df1.describe())
+print(test_df1.describe())
+
+
+# ここからモデルに　長かったしよくわからなかった…
+
+# In[254]:
+
+
+x_train=train_df1.drop(["Survived","PassengerId"],axis=1)
+y_train=train_df1["Survived"]
+x_test=test_df1.drop(["Survived","PassengerId"],axis=1)
+x_train.shape,y_train.shape,x_test.shape
 
 
 # In[ ]:
